@@ -1,0 +1,75 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_blobs
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+
+# Генеруємо випадкові дані для прикладу
+X, _ = make_blobs(n_samples=300, centers=4, cluster_std=0.60, random_state=0)
+
+
+
+# Метод зсуву середнього для визначення оптимальної кількості кластерів
+def shift_mean(X):
+    # Визначаємо кількість кластерів
+    distances = []
+    for i in range(1, len(X)):
+        distances.append(np.sqrt(np.mean((X[:-i] - X[i:]) ** 2)))
+
+    return distances.index(min(distances)) + 1
+
+
+# Визначення оптимальної кількості кластерів методом зсуву середнього
+optimal_clusters = shift_mean(X)
+
+
+# Створення фігури для рисунків
+fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+
+
+# Малюнок 1: Вихідні точки на площині
+axs[0, 0].scatter(X[:, 0], X[:, 1])
+axs[0, 0].set_title('vuhidni tochku')
+
+
+# Метод k-середніх для визначення центрів кластерів
+kmeans = KMeans(n_clusters=optimal_clusters)
+kmeans.fit(X)
+centers = kmeans.cluster_centers_
+
+
+# Малюнок 2: Центри кластерів (метод зсуву середнього)
+axs[0, 1].scatter(X[:, 0], X[:, 1], c=kmeans.labels_, cmap='viridis')
+axs[0, 1].scatter(centers[:, 0], centers[:, 1], marker='o', s=200, c='red', label='center klasteriv')
+axs[0, 1].set_title('centr klasteriv (metodom zcyvy serednego)')
+axs[0, 1].legend()
+
+
+# Малюнок 3: Бар діаграмма score(number of clusters)
+scores = []
+for n_clusters in range(2, 16):
+    kmeans = KMeans(n_clusters=n_clusters)
+    kmeans.fit(X)
+    score = silhouette_score(X, kmeans.labels_)
+    scores.append(score)
+
+axs[1, 0].bar(range(2, 16), scores)
+axs[1, 0].set_xlabel('kilkisti klasteriv')
+axs[1, 0].set_ylabel('Score')
+axs[1, 0].set_title('Score(number of clusters)')
+
+
+# Малюнок 4: Кластеризовані дані з областями кластеризації
+kmeans = KMeans(n_clusters=optimal_clusters)
+kmeans.fit(X)
+labels = kmeans.predict(X)
+axs[1, 1].scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis')
+axs[1, 1].scatter(centers[:, 0], centers[:, 1], marker='o', s=200, c='red', label='center klasteriv')
+axs[1, 1].set_title('Clustered data with clustering register')
+axs[1, 1].legend()
+
+plt.tight_layout()
+plt.show()
+
