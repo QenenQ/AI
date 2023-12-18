@@ -1,0 +1,69 @@
+import random
+
+import math
+
+
+
+# Генерація початкової популяції
+def generate_population(size):
+    return [[random.uniform(-10, 10) for _ in range(3)] for _ in range(size)]
+
+
+
+# Обчислення функції
+def eval_func(individual):
+    x, y, z = individual
+    result = 1 / (1 + (x - 2) ** 2 + (y + 1) ** 2 + (z - 1) ** 2)
+    return result  # Повертаємо лише число, а не кортеж
+
+
+
+# Вибірка особин для схрещування
+def selection(population, scores, k=5):
+    selected = [population[i] for i in random.choices(range(len(population)), k=k, weights=scores)]
+    return selected
+
+
+
+# Схрещування двох батьків
+def crossover(parent1, parent2):
+    point = random.randint(1, len(parent1) - 1)
+    child1 = parent1[:point] + parent2[point:]
+    child2 = parent2[:point] + parent1[point:]
+    return child1, child2
+
+
+# Мутація дитини
+def mutation(child):
+    index = random.randint(0, len(child) - 1)
+    child[index] += random.uniform(-0.5, 0.5)
+    return child
+
+
+# Генетичний алгоритм
+def genetic_algorithm(population_size, generations):
+    population = generate_population(population_size)
+    for gen in range(generations):
+        scores = [eval_func(ind) for ind in population]
+        best_individual = population[scores.index(max(scores))]
+        print(f"pokolinny {gen}: krahi rezyltat: {eval_func(best_individual)}")
+
+        new_population = [best_individual]
+        while len(new_population) < population_size:
+            selected = selection(population, scores)
+            parent1, parent2 = selected[0], selected[1]
+            child1, child2 = crossover(parent1, parent2)
+            child1 = mutation(child1)
+            child2 = mutation(child2)
+            new_population.append(child1)
+            new_population.append(child2)
+
+        population = new_population
+
+    return best_individual
+
+
+
+# Виклик генетичного алгоритму з заданням розміру популяції та кількістю поколінь
+best_solution = genetic_algorithm(population_size=50, generations=50)
+print(f"krahi rezyltat: {eval_func(best_solution)} dly x, y, z = {best_solution}")
